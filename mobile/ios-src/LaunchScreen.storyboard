@@ -32,6 +32,6 @@
         </scene>
     </scenes>
     <resources>
-        <image name="bevy.png" width="152.33058166503906" height="152.33058166503906"/>
-    </resources>
+    <!--    <image name="bevy.png" width="152.33058166503906" height="152.33058166503906"/> -->
+    </resources> 
 </document>

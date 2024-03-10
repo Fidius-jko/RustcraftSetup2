@@ -1,8 +1,8 @@
 [package]
-name = "bevy_game" # ToDo
-version = "0.1.0"
+name = "rustcraft"
+version = "0.0.1" # TODO VERSION
 publish = false
-authors = ["Niklas Eicker <git@nikl.me>"] # ToDo: you are the author ;)
+authors = ["Nikolay Grishaev <github/Fidius-jko>"]
 edition = "2021"
 exclude = ["dist", "build", "assets", "credits"]
 
@@ -14,6 +14,7 @@ opt-level = 3
 
 [profile.dev]
 opt-level = 1
+features = ["dev"]
 
 # This is used by trunk as it doesn't support custom profiles: https://github.com/trunk-rs/trunk/issues/605
 # xbuild also uses this profile for building android AABs because I couldn't find a configuration for it
@@ -62,10 +63,6 @@ bevy = { version = "0.13", default-features = false, features = [
     "webgl2",
     "bevy_debug_stepping",
 ] }
-bevy_kira_audio = { version = "0.19" }
-bevy_asset_loader = { version = "0.20" }
-rand = { version = "0.8.3" }
-webbrowser = { version = "0.8", features = ["hardened"] }
 
 # keep the following in sync with Bevy's dependencies
 winit = { version = "0.29", default-features = false }
