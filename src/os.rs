@@ -51,7 +51,7 @@ pub fn gen_app(os: OSType) -> App {
 
     app.insert_resource(start_settings);
     app.add_plugins(crate::GamePlugin);
-    return app;
+    app
 }
 
 fn mobile_settings(app: &mut App) {
