@@ -7,6 +7,7 @@ mod locale;
 mod os;
 mod prelude;
 mod resources;
+mod voxel;
 
 pub use os::gen_app;
 pub use os::OSType;
@@ -18,6 +19,7 @@ use bevy::prelude::*;
 use bevy_framepace::{FramepacePlugin, FramepaceSettings};
 use bevy_panic_handler::PanicHandlerBuilder;
 use resources::ResourcesPlugin;
+use voxel::VoxelPlugin;
 
 #[derive(Default, States, Debug, Hash, PartialEq, Eq, Clone, Copy)]
 pub enum GameState {
@@ -37,6 +39,7 @@ impl Plugin for GamePlugin {
             FramepacePlugin,
             ResourcesPlugin,
             CameraPlugin,
+            VoxelPlugin,
         ))
         .insert_resource(FramepaceSettings {
             limiter: bevy_framepace::Limiter::from_framerate(60.),

@@ -2,7 +2,7 @@ use crate::prelude::*;
 use bevy::window::{CursorGrabMode, PrimaryWindow};
 use leafwing_input_manager::prelude::*;
 
-pub const CAMERA_SPEED: f32 = 5.;
+pub const CAMERA_SPEED: f32 = 8.;
 pub const CAMERA_SENTIVITY: f32 = 0.00012;
 
 pub struct CameraPlugin;
@@ -120,9 +120,7 @@ fn change_view(
             match window.cursor.grab_mode {
                 CursorGrabMode::None => (),
                 _ => {
-                    let axis_pair = action_state
-                        .clamped_axis_pair(&CameraActions::ViewMotion)
-                        .unwrap();
+                    let axis_pair = action_state.axis_pair(&CameraActions::ViewMotion).unwrap();
                     // Using smallest of height or width ensures equal vertical and horizontal sensitivity
                     let window_scale = window.height().min(window.width());
                     pitch -= (CAMERA_SENTIVITY * axis_pair.y() * window_scale).to_radians();
