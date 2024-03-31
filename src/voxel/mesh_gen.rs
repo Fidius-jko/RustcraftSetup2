@@ -6,25 +6,6 @@ use bevy::render::{
     render_asset::RenderAssetUsages,
 };
 
-#[rustfmt::skip]
-pub fn create_cube_mesh() -> Mesh{
-    let mut main = Mesh::new(
-        PrimitiveTopology::TriangleList,
-        RenderAssetUsages::MAIN_WORLD | RenderAssetUsages::RENDER_WORLD,
-    ).with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, Vec::<[f32; 3]>::new())
-    .with_inserted_indices(Indices::U32(Vec::<u32>::new()))
-    .with_inserted_attribute(ATTRIBUTE_BLEND_COLOR, Vec::<[f32; 4]>::new());
-    merge_mesh(&mut main, &mut vec![
-        square_mesh(1., 1., SquareType3D::Top(1.)),
-        square_mesh(1., 1., SquareType3D::Top(-1.)),
-        square_mesh(1., 1., SquareType3D::Right(-1.)),
-        square_mesh(1., 1., SquareType3D::Right(1.)),
-        square_mesh(1., 1., SquareType3D::Back(-1.)),
-        square_mesh(1., 1., SquareType3D::Back(1.))
-    ], Vec3::splat(0.));
-    main
-}
-
 pub enum SquareType3D {
     Back(f32),  // +Z
     Right(f32), // +X

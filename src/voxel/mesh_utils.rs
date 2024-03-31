@@ -1,7 +1,8 @@
 use crate::prelude::*;
 
 use bevy::render::{
-    mesh::{Indices, MeshVertexAttribute, VertexAttributeValues},
+    mesh::{Indices, MeshVertexAttribute, PrimitiveTopology, VertexAttributeValues},
+    render_asset::RenderAssetUsages,
     render_resource::VertexFormat,
 };
 
@@ -18,6 +19,7 @@ pub fn merge_mesh(mesh: &mut Mesh, meshes: &mut Vec<Mesh>, mesh_move: Vec3) {
 }
 pub const ATTRIBUTE_BLEND_COLOR: MeshVertexAttribute =
     MeshVertexAttribute::new("BlendColor", 988540917, VertexFormat::Float32x4);
+
 pub fn merge_attrs(mesh_move: Vec3, mesh2: &mut Mesh, mesh: &mut Mesh) {
     // translating
     mesh2.translate_by(mesh_move);
@@ -32,6 +34,15 @@ pub fn merge_attrs(mesh_move: Vec3, mesh2: &mut Mesh, mesh: &mut Mesh) {
     merge_attr!(Mesh::ATTRIBUTE_POSITION, mesh, mesh2, Float32x3);
     merge_attr!(ATTRIBUTE_BLEND_COLOR, mesh, mesh2, Float32x4);
     merge_indices!(mesh, mesh2, U32, ver_cnt as u32);
+}
+pub fn void_mesh() -> Mesh {
+    Mesh::new(
+        PrimitiveTopology::TriangleList,
+        RenderAssetUsages::MAIN_WORLD | RenderAssetUsages::RENDER_WORLD,
+    )
+    .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, Vec::<[f32; 3]>::new())
+    .with_inserted_indices(Indices::U32(Vec::<u32>::new()))
+    .with_inserted_attribute(ATTRIBUTE_BLEND_COLOR, Vec::<[f32; 4]>::new())
 }
 
 /// Marco for adding vertex atribute __$mesh and $mesh2 must can mutable refenced__

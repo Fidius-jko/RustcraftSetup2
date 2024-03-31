@@ -1,5 +1,11 @@
+mod block;
+mod chunk;
 mod mesh_gen;
 mod mesh_utils;
+mod voxel_render;
+use block::*;
+use chunk::*;
+
 use crate::prelude::*;
 use bevy::{
     pbr::{MaterialPipeline, MaterialPipelineKey},
@@ -20,30 +26,44 @@ impl Plugin for VoxelPlugin {
     }
 }
 
-const CHUNCK_W: u32 = 16;
-
 fn spawn_cube(
     mut commands: Commands,
     mut materials: ResMut<Assets<VoxelMaterial>>,
     mut meshes: ResMut<Assets<Mesh>>,
 ) {
-    let mut mesh_main = create_cube_mesh();
-    for _i in 0..CHUNCK_W {
-        for _i in 0..CHUNCK_W {
-            //let mut mesh = create_cube_mesh();
-            let mut meshes2 = Vec::new();
-
-            for _i in 0..CHUNCK_W {
-                meshes2.push(create_cube_mesh());
+    let mut storage = BlockStorage::default();
+    storage.add(
+        BlockId(0),
+        BlockType {
+            sides: BlockSides {
+                left: BlockSideInfo(square_mesh(1., 1., SquareType3D::Right(-1.))),
+                right: BlockSideInfo(square_mesh(1., 1., SquareType3D::Right(1.))),
+                top: BlockSideInfo(square_mesh(1., 1., SquareType3D::Top(1.))),
+                bottom: BlockSideInfo(square_mesh(1., 1., SquareType3D::Top(-1.))),
+                forward: BlockSideInfo(square_mesh(1., 1., SquareType3D::Back(-1.))),
+                back: BlockSideInfo(square_mesh(1., 1., SquareType3D::Back(1.))),
+            },
+        },
+    );
+    let chunk = Chunk::new(|| {
+        let mut chunk = Chunk::air();
+        for x in 0..CHUNK_W {
+            for y in 0..CHUNK_H {
+                for z in 0..CHUNK_D {
+                    if y == x {
+                        chunk.set(x, y, z, Block::Solid(BlockId(0)));
+                    }
+                }
             }
-            merge_mesh(&mut mesh_main, &mut meshes2, Vec3::new(2., 0., 0.));
-            mesh_main.translate_by(Vec3::new(0., 2., 0.));
         }
-        mesh_main.translate_by(Vec3::new(0., -2. * CHUNCK_W as f32, 2.));
-    }
-    let cube_mesh_handle: Handle<Mesh> = meshes.add(mesh_main);
+
+        chunk
+    });
+    let mesh_main = chunk.create_mesh(storage);
+    let chunk_mesh_handle: Handle<Mesh> = meshes.add(mesh_main);
+
     commands.spawn(MaterialMeshBundle::<VoxelMaterial> {
-        mesh: cube_mesh_handle,
+        mesh: chunk_mesh_handle,
         material: materials.add(VoxelMaterial {
             color: Color::rgb(1., 1., 0.),
         }),
