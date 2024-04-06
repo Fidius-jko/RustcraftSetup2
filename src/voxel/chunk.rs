@@ -7,8 +7,9 @@ pub const CHUNK_W: usize = 16;
 pub const CHUNK_D: usize = 16;
 pub const CHUNK_H: usize = 16;
 
+#[derive(Component)]
 pub struct Chunk {
-    blocks: [[[Block; CHUNK_W]; CHUNK_D]; CHUNK_H],
+    blocks: [[[Block; CHUNK_W + 1]; CHUNK_D + 1]; CHUNK_H],
 }
 
 #[allow(dead_code)]
@@ -16,25 +17,20 @@ impl Chunk {
     pub fn new(generator: impl Fn() -> Chunk) -> Self {
         generator()
     }
-    pub fn one_type(block_id: BlockId) -> Self {
-        let blocks = [[[Block::Solid(block_id); CHUNK_W]; CHUNK_D]; CHUNK_H];
-
-        Self { blocks }
-    }
     pub fn air() -> Self {
         Self {
-            blocks: [[[Block::Air; CHUNK_W]; CHUNK_D]; CHUNK_H],
+            blocks: [[[Block::Air; CHUNK_W + 1]; CHUNK_D + 1]; CHUNK_H],
         }
     }
     pub fn set(&mut self, x: usize, y: usize, z: usize, val: Block) {
         self.blocks[y][z][x] = val;
     }
-    pub fn create_mesh(&self, storage: BlockStorage) -> Mesh {
+    pub fn create_mesh(&self, storage: Res<BlockStorage>) -> Mesh {
         let mut main_mesh = void_mesh();
-        for x in 0..CHUNK_W {
+        for x in 0..CHUNK_W + 1 {
             for y in 0..CHUNK_H {
                 let mut meshes = Vec::new();
-                for z in 0..CHUNK_D {
+                for z in 0..CHUNK_D + 1 {
                     meshes.push(
                         generate_sides_mesh(x, y, z, &storage, &self.blocks)
                             .translated_by(Vec3::new(0., 0., 2. * z as f32)),
@@ -54,11 +50,11 @@ pub fn generate_sides_mesh(
     y: usize,
     z: usize,
     storage: &BlockStorage,
-    blocks: &[[[Block; CHUNK_W]; CHUNK_D]; CHUNK_H],
+    blocks: &[[[Block; CHUNK_W + 1]; CHUNK_D + 1]; CHUNK_H],
 ) -> Mesh {
     let mut mesh = void_mesh();
 
-    if !blocks[y][z][x].is_solid() {
+    if !blocks[y][z][x].is_solid() || ((x == CHUNK_W || x == 0) && (z == CHUNK_D || z == 0)) {
         return mesh;
     }
 

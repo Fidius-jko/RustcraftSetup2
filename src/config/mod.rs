@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-/// TODO. This is STUB!
+/// TODO. This is DUMMY!
 use crate::prelude::*;
 //use serde::{Deserialize, Serialize};
 

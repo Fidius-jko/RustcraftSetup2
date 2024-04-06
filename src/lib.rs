@@ -42,7 +42,7 @@ impl Plugin for GamePlugin {
             VoxelPlugin,
         ))
         .insert_resource(FramepaceSettings {
-            limiter: bevy_framepace::Limiter::from_framerate(60.),
+            limiter: bevy_framepace::Limiter::Off,
         })
         .init_state::<GameState>();
         #[cfg(debug_assertions)]

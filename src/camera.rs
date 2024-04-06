@@ -2,7 +2,7 @@ use crate::prelude::*;
 use bevy::window::{CursorGrabMode, PrimaryWindow};
 use leafwing_input_manager::prelude::*;
 
-pub const CAMERA_SPEED: f32 = 8.;
+pub const CAMERA_SPEED: f32 = 30.;
 pub const CAMERA_SENTIVITY: f32 = 0.00012;
 
 pub struct CameraPlugin;

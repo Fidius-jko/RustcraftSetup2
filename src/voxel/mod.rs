@@ -1,5 +1,6 @@
 mod block;
 mod chunk;
+mod chunks;
 mod mesh_gen;
 mod mesh_utils;
 mod voxel_render;
@@ -21,37 +22,32 @@ pub struct VoxelPlugin;
 
 impl Plugin for VoxelPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameState::Play), spawn_cube)
-            .add_plugins(MaterialPlugin::<VoxelMaterial>::default());
+        app.add_systems(OnEnter(GameState::Play), spawn_chunk)
+            .add_plugins(MaterialPlugin::<VoxelMaterial>::default())
+            .add_plugins(block::BlockPlugin);
     }
 }
 
-fn spawn_cube(
+fn spawn_chunk(
     mut commands: Commands,
     mut materials: ResMut<Assets<VoxelMaterial>>,
     mut meshes: ResMut<Assets<Mesh>>,
+    storage: Res<BlockStorage>,
 ) {
-    let mut storage = BlockStorage::default();
-    storage.add(
-        BlockId(0),
-        BlockType {
-            sides: BlockSides {
-                left: BlockSideInfo(square_mesh(1., 1., SquareType3D::Right(-1.))),
-                right: BlockSideInfo(square_mesh(1., 1., SquareType3D::Right(1.))),
-                top: BlockSideInfo(square_mesh(1., 1., SquareType3D::Top(1.))),
-                bottom: BlockSideInfo(square_mesh(1., 1., SquareType3D::Top(-1.))),
-                forward: BlockSideInfo(square_mesh(1., 1., SquareType3D::Back(-1.))),
-                back: BlockSideInfo(square_mesh(1., 1., SquareType3D::Back(1.))),
-            },
-        },
-    );
     let chunk = Chunk::new(|| {
         let mut chunk = Chunk::air();
-        for x in 0..CHUNK_W {
-            for y in 0..CHUNK_H {
-                for z in 0..CHUNK_D {
-                    if y == x {
-                        chunk.set(x, y, z, Block::Solid(BlockId(0)));
+        for x in 1..CHUNK_W - 1 {
+            for y in 1..CHUNK_H - 1 {
+                for z in 1..CHUNK_D - 1 {
+                    if (y as f32) > (z as f32 + x as f32).sin() {
+                        chunk.set(
+                            x,
+                            y,
+                            z,
+                            Block::Solid(
+                                storage.get_id_by_name("test".to_string()).unwrap().clone(),
+                            ),
+                        );
                     }
                 }
             }
@@ -62,13 +58,15 @@ fn spawn_cube(
     let mesh_main = chunk.create_mesh(storage);
     let chunk_mesh_handle: Handle<Mesh> = meshes.add(mesh_main);
 
-    commands.spawn(MaterialMeshBundle::<VoxelMaterial> {
-        mesh: chunk_mesh_handle,
-        material: materials.add(VoxelMaterial {
-            color: Color::rgb(1., 1., 0.),
-        }),
-        ..Default::default()
-    });
+    commands
+        .spawn(MaterialMeshBundle::<VoxelMaterial> {
+            mesh: chunk_mesh_handle,
+            material: materials.add(VoxelMaterial {
+                color: Color::rgb(1., 1., 0.),
+            }),
+            ..Default::default()
+        })
+        .insert(chunk);
 }
 
 #[derive(Clone, AsBindGroup, Asset, TypePath)]
