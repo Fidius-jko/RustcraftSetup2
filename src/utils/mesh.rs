@@ -1,11 +1,67 @@
-use super::mesh_utils::*;
 use crate::prelude::*;
-
 use bevy::render::{
     mesh::{Indices, PrimitiveTopology},
     render_asset::RenderAssetUsages,
 };
+/// Mesh must have attrs:
+/// [`UV_0`] TODO!
+/// [`Indices`]
+/// [`POSITION`]
 
+/// MESH ATTRS
+//pub const ATTRIBUTE_BLEND_COLOR: MeshVertexAttribute =
+//    MeshVertexAttribute::new("BlendColor", 988540917, VertexFormat::Float32x4);
+/// ..........
+
+pub trait WithUvCoords {
+    fn with_uv_coords(self, image_size: UVec2, image_rect: Rect) -> Mesh;
+}
+
+impl WithUvCoords for Mesh {
+    /// Panics: if mesh is not square
+    fn with_uv_coords(self, image_size: UVec2, image_rect: Rect) -> Mesh {
+        self.with_inserted_attribute(
+            Mesh::ATTRIBUTE_UV_0,
+            Vec::from(get_uv_coords(image_size, image_rect)),
+        )
+    }
+}
+pub fn get_uv_coords(image_size: UVec2, coord: Rect) -> [[f32; 2]; 4] {
+    let prev = (
+        [
+            coord.min.x / image_size.x as f32,
+            coord.min.y / image_size.y as f32,
+        ],
+        [
+            coord.max.x / image_size.x as f32,
+            coord.max.y / image_size.y as f32,
+        ],
+    );
+    [
+        prev.1,
+        [prev.0[0], prev.1[1]],
+        prev.0,
+        [prev.1[0], prev.0[1]],
+    ]
+}
+
+pub fn merge_meshes(mesh: &mut Mesh, meshes: &Vec<Mesh>) {
+    for mesh2 in meshes.iter() {
+        mesh.merge(mesh2.clone());
+    }
+}
+
+pub fn void_mesh() -> Mesh {
+    Mesh::new(
+        PrimitiveTopology::TriangleList,
+        RenderAssetUsages::MAIN_WORLD | RenderAssetUsages::RENDER_WORLD,
+    )
+    .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, Vec::<[f32; 3]>::new())
+    .with_inserted_indices(Indices::U32(Vec::<u32>::new()))
+    .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, Vec::<[f32; 2]>::new())
+}
+
+#[derive(TypePath, Debug, serde::Deserialize)]
 pub enum SquareType3D {
     Back(f32),  // +Z
     Right(f32), // +X
@@ -61,16 +117,16 @@ pub fn square_mesh(width: f32, height: f32, s_type: SquareType3D) -> Mesh {
         mesh.insert_indices(Indices::U32(vec![0, 1, 3, 1, 2, 3]));
     } else {
         mesh.insert_indices(Indices::U32(vec![0, 3, 1, 1, 3, 2]));
-    }
-    mesh.insert_attribute(
-        ATTRIBUTE_BLEND_COLOR,
-        vec![
-            [1., 1., 1., 1.],
-            [0., 1., 0., 1.],
-            [1., 0., 1., 1.],
-            [0., 0., 1., 1.],
-        ],
-    );
+    } /*
+      mesh.insert_attribute(
+          ATTRIBUTE_BLEND_COLOR,
+          vec![
+              [1., 1., 1., 1.],
+              [0., 1., 0., 1.],
+              [1., 0., 1., 1.],
+              [0., 0., 1., 1.],
+          ],
+      );*/
     mesh.scale_by(Vec3::new(width, height, 1.));
     mesh
 }

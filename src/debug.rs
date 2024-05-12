@@ -1,3 +1,4 @@
+/// Plugin for debugging
 use crate::prelude::*;
 #[cfg(debug_assertions)]
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};

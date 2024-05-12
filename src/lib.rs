@@ -7,6 +7,7 @@ mod locale;
 mod os;
 mod prelude;
 mod resources;
+pub mod utils;
 mod voxel;
 
 pub use os::gen_app;

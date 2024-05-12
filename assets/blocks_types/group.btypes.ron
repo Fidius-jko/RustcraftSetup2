@@ -1,0 +1,30 @@
+(
+    images: {
+        "dirt": "textures/blocks/dirt.png",
+        "grass_side": "textures/blocks/grass_side.png",
+        "grass_up": "textures/blocks/grass_up.png"
+    },
+    types: {
+        "dirt": Block(
+            faces: (
+                top:      "dirt", 
+                bottom:   "dirt", 
+                left:     "dirt", 
+                right:    "dirt", 
+                forward:  "dirt", 
+                backward: "dirt",
+            )
+        ),
+        "grass": Block(
+            faces: (
+                top:      "grass_up", 
+                bottom:   "dirt", 
+                left:     "grass_side", 
+                right:    "grass_side", 
+                forward:  "grass_side", 
+                backward: "grass_side",
+            )
+        ),
+        
+    }
+)

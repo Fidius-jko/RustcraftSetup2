@@ -1,3 +1,4 @@
+/// Camera moving
 use crate::prelude::*;
 use bevy::window::{CursorGrabMode, PrimaryWindow};
 use leafwing_input_manager::prelude::*;

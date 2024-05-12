@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+/// Loale :)
 /// TODO! Locale is not maded!
 //use crate::config::GameSettings;
 use crate::prelude::*;
