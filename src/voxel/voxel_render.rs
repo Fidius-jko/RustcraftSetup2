@@ -8,7 +8,7 @@ use bevy::{
     },
 };
 
-use super::{BlockStorage, Chunk};
+use super::{mesh::create_chunk_mesh, BlockStorage, Chunk};
 
 pub struct VoxelRenderPlugin;
 
@@ -25,7 +25,7 @@ fn make_mesh(
     entities: Query<Entity, With<Chunk>>,
     storage: Res<BlockStorage>,
     mut meshes_storage: ResMut<Assets<Mesh>>,
-    mut meshes: Query<&mut Handle<Mesh>>,
+    mut meshes: Query<(&mut Handle<Mesh>, &mut Transform)>,
 ) {
     for entity in entities.iter() {
         let chunk = chunks.get(entity).unwrap();
@@ -33,17 +33,22 @@ fn make_mesh(
             continue;
         }
         if meshes.contains(entity) {
-            let mesh = meshes.get_mut(entity).unwrap();
-            *meshes_storage.get_mut(mesh.clone()).unwrap() =
-                chunk.create_mesh(&storage, &chunks.to_readonly());
+            let (mesh, mut transf) = meshes.get_mut(entity).unwrap();
+            let (chunk_mesh, translation) =
+                create_chunk_mesh(chunk, &storage, &chunks.to_readonly());
+            transf.translation = translation;
+            *meshes_storage.get_mut(mesh.clone()).unwrap() = chunk_mesh;
         } else {
+            let (chunk_mesh, translation) =
+                create_chunk_mesh(chunk, &storage, &chunks.to_readonly());
             commands
                 .entity(entity)
                 .insert(MaterialMeshBundle::<VoxelMaterial> {
-                    mesh: meshes_storage.add(chunk.create_mesh(&storage, &chunks.to_readonly())),
+                    mesh: meshes_storage.add(chunk_mesh),
                     material: materials.add(VoxelMaterial {
                         color_texture: storage.imgs.texture.clone(),
                     }),
+                    transform: Transform::from_translation(translation),
                     ..Default::default()
                 });
         }

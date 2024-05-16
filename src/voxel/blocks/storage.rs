@@ -3,6 +3,7 @@ use bevy::utils::HashMap;
 use crate::{
     prelude::*,
     resources::blocks::{BlockTypesAsset, UnMeshedBlockType},
+    voxel::blocks::image_storage::BlockImageStorage,
 };
 
 pub struct BlockType {
@@ -22,120 +23,10 @@ pub struct BlockSides {
 #[derive(Clone)]
 pub struct BlockSideInfo(pub Mesh);
 
-pub struct BlockImageStorage {
-    pub texture: Handle<Image>,
-    pub texture_size: UVec2,
-    pub layout: Handle<TextureAtlasLayout>,
-    pub binds: HashMap<String, usize>,
-}
-
-impl BlockImageStorage {
-    fn get_texture_rect(&self, name: &str, layouts: &Res<Assets<TextureAtlasLayout>>) -> Rect {
-        let layout = layouts.get(self.layout.clone()).unwrap();
-        let ind = match self.binds.get(name) {
-            Some(i) => i,
-            None => {
-                return layout
-                    .textures
-                    .get(0 /*Default texture*/)
-                    .clone()
-                    .expect("Not found default texture")
-                    .clone();
-            }
-        };
-        match layout.textures.get(ind.clone()).clone() {
-            Some(rect) => rect.clone(),
-            None => {
-                return layout
-                    .textures
-                    .get(0 /*Default texture*/)
-                    .clone()
-                    .expect("Not found default texture")
-                    .clone();
-            }
-        }
-    }
-    fn merge(
-        &mut self,
-        another: Self,
-        mut images: ResMut<Assets<Image>>,
-        layouts: &mut ResMut<Assets<TextureAtlasLayout>>,
-    ) {
-        let mut builder = TextureAtlasBuilder::default();
-
-        builder.add_texture(
-            Some(self.texture.clone().into()),
-            images.get(self.texture.clone()).unwrap(),
-        );
-        builder.add_texture(
-            Some(another.texture.clone().into()),
-            images.get(another.texture.clone()).unwrap(),
-        );
-
-        let (mut layout, texture) = builder.finish().unwrap();
-        let mut self_layout = layouts.get(self.layout.clone()).unwrap().clone();
-        let mut another_layout = layouts.get(another.layout.clone()).unwrap().clone();
-        for rect in self_layout.textures.iter_mut() {
-            let rect2 = layout.textures.get(0).unwrap();
-            rect.min.x += rect2.min.x;
-            rect.min.y += rect2.min.y;
-            rect.max.x += rect2.min.x;
-            rect.max.y += rect2.min.y;
-        }
-        for rect in another_layout.textures.iter_mut() {
-            let rect2 = layout.textures.get(1).unwrap();
-            rect.min.x += rect2.min.x;
-            rect.min.y += rect2.min.y;
-            rect.max.x += rect2.min.x;
-            rect.max.y += rect2.min.y;
-        }
-        for (name, ind) in another.binds.iter() {
-            self.binds
-                .insert(name.clone(), ind + self_layout.textures.len());
-        }
-
-        layout.textures = Vec::from(self_layout.textures);
-        layout.textures.append(&mut another_layout.textures);
-
-        self.texture_size = texture.size();
-        self.texture = images.add(texture);
-        *layouts.get_mut(self.layout.clone()).unwrap() = layout;
-        //*images.get_mut(self.texture.clone()).unwrap() = texture;
-    }
-    fn empty(
-        asset_server: Res<AssetServer>,
-        layouts: &mut ResMut<Assets<TextureAtlasLayout>>,
-    ) -> Self {
-        let mut binds = HashMap::new();
-        binds.insert("unknown".to_string(), 0);
-        let mut layout = TextureAtlasLayout::new_empty(Vec2::new(
-            resources::embedded::UNKNOWN_TEXTURE_SIZE.0 as f32,
-            resources::embedded::UNKNOWN_TEXTURE_SIZE.1 as f32,
-        ));
-        layout.add_texture(Rect {
-            min: Vec2::new(0., 0.),
-            max: Vec2::new(16., 16.),
-        });
-        Self {
-            texture: asset_server
-                .load("embedded://".to_string() + resources::embedded::UNKNOWN_TEXTURE_PATH),
-            texture_size: UVec2::from(resources::embedded::UNKNOWN_TEXTURE_SIZE),
-            layout: layouts.add(layout),
-            binds,
-        }
-    }
-}
-
 #[derive(Clone, PartialEq, Eq, Hash, Copy, Debug, Default)]
 pub struct BlockId(pub u32);
 
-use utils::mesh::WithUvCoords;
-
-use utils::mesh::square_mesh;
-
-use utils::mesh::SquareType3D;
-
-use self::resources::blocks::BlockFaces;
+use self::{resources::blocks::BlockFaces, voxel::mesh::meshing_block_type};
 
 #[derive(Resource)]
 pub struct BlockStorage {
@@ -183,55 +74,9 @@ impl BlockStorage {
         type_: UnMeshedBlockType,
         layouts: &Res<Assets<TextureAtlasLayout>>,
     ) {
-        self.add_block_type(name.clone(), self.meshing_block_type(&type_, &layouts));
+        self.add_block_type(name.clone(), meshing_block_type(self, &type_, &layouts));
         self.un_meshed_storage
             .insert(self.get_id_by_name(name).unwrap().clone(), type_);
-    }
-
-    fn meshing_block_type(
-        &self,
-        type_: &UnMeshedBlockType,
-        layouts: &Res<Assets<TextureAtlasLayout>>,
-    ) -> BlockType {
-        match type_ {
-            UnMeshedBlockType::Block { faces } => {
-                let left_rect = self.imgs.get_texture_rect(&faces.left.clone(), layouts);
-                let right_rect = self.imgs.get_texture_rect(&faces.right.clone(), layouts);
-                let top_rect = self.imgs.get_texture_rect(&faces.top.clone(), layouts);
-                let bottom_rect = self.imgs.get_texture_rect(&faces.bottom.clone(), layouts);
-                let forward_rect = self.imgs.get_texture_rect(&faces.forward.clone(), layouts);
-                let back_rect = self.imgs.get_texture_rect(&faces.backward.clone(), layouts);
-
-                BlockType {
-                    sides: BlockSides {
-                        left: BlockSideInfo(
-                            square_mesh(1., 1., SquareType3D::Right(-1.))
-                                .with_uv_coords(self.imgs.texture_size, left_rect.clone()),
-                        ),
-                        right: BlockSideInfo(
-                            square_mesh(1., 1., SquareType3D::Right(1.))
-                                .with_uv_coords(self.imgs.texture_size, right_rect.clone()),
-                        ),
-                        top: BlockSideInfo(
-                            square_mesh(1., 1., SquareType3D::Top(1.))
-                                .with_uv_coords(self.imgs.texture_size, top_rect.clone()),
-                        ),
-                        bottom: BlockSideInfo(
-                            square_mesh(1., 1., SquareType3D::Top(-1.))
-                                .with_uv_coords(self.imgs.texture_size, bottom_rect.clone()),
-                        ),
-                        forward: BlockSideInfo(
-                            square_mesh(1., 1., SquareType3D::Back(-1.))
-                                .with_uv_coords(self.imgs.texture_size, forward_rect.clone()),
-                        ),
-                        back: BlockSideInfo(
-                            square_mesh(1., 1., SquareType3D::Back(1.))
-                                .with_uv_coords(self.imgs.texture_size, back_rect.clone()),
-                        ),
-                    },
-                }
-            }
-        }
     }
 
     fn add_block_type(&mut self, name: String, t: BlockType) {
@@ -271,7 +116,7 @@ impl BlockStorage {
 
     pub fn update_meshes(&mut self, layouts: &Res<Assets<TextureAtlasLayout>>) {
         for (id, type_) in self.un_meshed_storage.iter() {
-            let type_ = self.meshing_block_type(type_, layouts);
+            let type_ = meshing_block_type(self, type_, layouts);
             *self.storage.get_mut(id).unwrap() = type_;
         }
     }

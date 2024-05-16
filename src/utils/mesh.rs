@@ -12,20 +12,6 @@ use bevy::render::{
 //pub const ATTRIBUTE_BLEND_COLOR: MeshVertexAttribute =
 //    MeshVertexAttribute::new("BlendColor", 988540917, VertexFormat::Float32x4);
 /// ..........
-
-pub trait WithUvCoords {
-    fn with_uv_coords(self, image_size: UVec2, image_rect: Rect) -> Mesh;
-}
-
-impl WithUvCoords for Mesh {
-    /// Panics: if mesh is not square
-    fn with_uv_coords(self, image_size: UVec2, image_rect: Rect) -> Mesh {
-        self.with_inserted_attribute(
-            Mesh::ATTRIBUTE_UV_0,
-            Vec::from(get_uv_coords(image_size, image_rect)),
-        )
-    }
-}
 pub fn get_uv_coords(image_size: UVec2, coord: Rect) -> [[f32; 2]; 4] {
     let prev = (
         [
@@ -69,7 +55,24 @@ pub enum SquareType3D {
 }
 
 #[allow(unused_assignments)]
-pub fn square_mesh(width: f32, height: f32, s_type: SquareType3D) -> Mesh {
+pub fn square_mesh(
+    width: f32,
+    height: f32,
+    s_type: SquareType3D,
+    image_size: UVec2,
+    image_rect: Rect,
+) -> Mesh {
+    let prev_uv = (
+        [
+            image_rect.min.x / image_size.x as f32,
+            image_rect.min.y / image_size.y as f32,
+        ],
+        [
+            image_rect.max.x / image_size.x as f32,
+            image_rect.max.y / image_size.y as f32,
+        ],
+    );
+
     let mut mesh = Mesh::new(
         PrimitiveTopology::TriangleList,
         RenderAssetUsages::MAIN_WORLD | RenderAssetUsages::RENDER_WORLD,
@@ -86,6 +89,15 @@ pub fn square_mesh(width: f32, height: f32, s_type: SquareType3D) -> Mesh {
                     [1., -1., 1. * factor],
                 ],
             );
+            mesh.insert_attribute(
+                Mesh::ATTRIBUTE_UV_0,
+                vec![
+                    prev_uv.1,
+                    [prev_uv.1[0], prev_uv.0[1]],
+                    prev_uv.0,
+                    [prev_uv.0[0], prev_uv.1[1]],
+                ],
+            );
             factor2 = factor;
         }
         SquareType3D::Right(factor) => {
@@ -96,6 +108,15 @@ pub fn square_mesh(width: f32, height: f32, s_type: SquareType3D) -> Mesh {
                     [1. * factor, -1., 1.],
                     [1. * factor, 1., 1.],
                     [1. * factor, 1., -1.],
+                ],
+            );
+            mesh.insert_attribute(
+                Mesh::ATTRIBUTE_UV_0,
+                vec![
+                    prev_uv.1,
+                    [prev_uv.0[0], prev_uv.1[1]],
+                    prev_uv.0,
+                    [prev_uv.1[0], prev_uv.0[1]],
                 ],
             );
             factor2 = factor;
@@ -110,6 +131,15 @@ pub fn square_mesh(width: f32, height: f32, s_type: SquareType3D) -> Mesh {
                     [-1., 1. * factor, 1.],
                 ],
             );
+            mesh.insert_attribute(
+                Mesh::ATTRIBUTE_UV_0,
+                vec![
+                    prev_uv.1,
+                    [prev_uv.0[0], prev_uv.1[1]],
+                    prev_uv.0,
+                    [prev_uv.1[0], prev_uv.0[1]],
+                ],
+            );
             factor2 = factor;
         }
     }
@@ -117,16 +147,7 @@ pub fn square_mesh(width: f32, height: f32, s_type: SquareType3D) -> Mesh {
         mesh.insert_indices(Indices::U32(vec![0, 1, 3, 1, 2, 3]));
     } else {
         mesh.insert_indices(Indices::U32(vec![0, 3, 1, 1, 3, 2]));
-    } /*
-      mesh.insert_attribute(
-          ATTRIBUTE_BLEND_COLOR,
-          vec![
-              [1., 1., 1., 1.],
-              [0., 1., 0., 1.],
-              [1., 0., 1., 1.],
-              [0., 0., 1., 1.],
-          ],
-      );*/
+    }
     mesh.scale_by(Vec3::new(width, height, 1.));
     mesh
 }

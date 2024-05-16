@@ -3,8 +3,6 @@ use bevy::ecs::query::QueryFilter;
 use super::blocks::*;
 use crate::prelude::*;
 
-use utils::mesh::{merge_meshes, void_mesh};
-
 pub const CHUNK_W: usize = 16;
 pub const CHUNK_D: usize = 16;
 pub const CHUNK_H: usize = 16;
@@ -49,32 +47,13 @@ impl Chunk {
     pub fn is_generated_mesh(&self) -> bool {
         self.is_generated_mesh
     }
-    pub fn create_mesh<T: QueryFilter>(
-        &self,
-        storage: &Res<BlockStorage>,
-        chunks: &Query<&Chunk, T>,
-    ) -> Mesh {
-        let mut main_mesh = void_mesh();
-        for x in 0..CHUNK_W {
-            for y in 0..CHUNK_H {
-                let y = CHUNK_H - y - 1;
-                let mut meshes = Vec::new();
-                for z in 0..CHUNK_D {
-                    meshes.push(
-                        generate_sides_mesh(self, x, y, z, chunks, &storage)
-                            .translated_by(Vec3::new(0., 0., 2. * z as f32)),
-                    );
-                }
-                merge_meshes(&mut main_mesh, &mut meshes);
-                main_mesh.translate_by(Vec3::new(0., 2., 0.));
-            }
-            main_mesh.translate_by(Vec3::new(2., -2. * CHUNK_H as f32, 0.));
-        }
-        if let Some(trans) = self.translation {
-            main_mesh.translate_by(trans);
-        }
-        main_mesh
+    pub fn translation(&self) -> Option<Vec3> {
+        self.translation.clone()
     }
+    pub fn get_from_only_my(&self, x: usize, y: usize, z: usize) -> Block {
+        self.blocks[y][z][x]
+    }
+
     pub fn get<T: QueryFilter>(&self, x: i32, y: i32, z: i32, chunks: &Query<&Chunk, T>) -> Block {
         let is_y0 = y >= 0;
         let is_x0 = x >= 0;
@@ -94,6 +73,8 @@ impl Chunk {
                     }
                 };
                 return chunk.get(CHUNK_W as i32 - 1, y, z, &chunks);
+            } else {
+                return Block::Air;
             }
         } else if !is_z0 {
             if let Some(e) = self.backward_chunk {
@@ -139,59 +120,4 @@ impl Chunk {
         }
         Block::Solid(BlockId(0))
     }
-}
-
-pub fn generate_sides_mesh<T: QueryFilter>(
-    chunk: &Chunk,
-    x: usize,
-    y: usize,
-    z: usize,
-    chunks: &Query<&Chunk, T>,
-    storage: &BlockStorage,
-) -> Mesh {
-    let mut mesh = void_mesh();
-
-    let Block::Solid(block) = chunk.blocks[y][z][x] else {
-        return mesh;
-    };
-    let sides = storage.get_or_default(block).sides.clone();
-
-    if !chunk
-        .get(x as i32, y as i32 - 1, z as i32, chunks)
-        .is_solid()
-    {
-        mesh.merge(sides.bottom.0.clone());
-    }
-    if !chunk
-        .get(x as i32, y as i32 + 1, z as i32, chunks)
-        .is_solid()
-    {
-        mesh.merge(sides.top.0.clone());
-    }
-
-    if !chunk
-        .get(x as i32, y as i32, z as i32 + 1, chunks)
-        .is_solid()
-    {
-        mesh.merge(sides.back.0.clone());
-    }
-    if !chunk
-        .get(x as i32, y as i32, z as i32 - 1, chunks)
-        .is_solid()
-    {
-        mesh.merge(sides.forward.0.clone());
-    }
-    if !chunk
-        .get(x as i32 + 1, y as i32, z as i32, chunks)
-        .is_solid()
-    {
-        mesh.merge(sides.left.0.clone());
-    }
-    if !chunk
-        .get(x as i32 - 1, y as i32, z as i32, chunks)
-        .is_solid()
-    {
-        mesh.merge(sides.right.0.clone());
-    }
-    mesh
 }

@@ -2,6 +2,7 @@
 mod blocks;
 mod chunk;
 mod chunks;
+mod mesh;
 mod voxel_render;
 use blocks::*;
 use chunk::*;
@@ -25,8 +26,15 @@ fn spawn_chunk(mut commands: Commands, storage: Res<BlockStorage>) {
         for x in 0..CHUNK_W {
             for y in 0..CHUNK_H {
                 for z in 0..CHUNK_D {
-                    if (y as f32) <= ((z as f32).sin() * 2. + 2.) * 5. {
-                        chunk.set(x, y, z, Block::Solid(BlockId((y % 3) as u32)));
+                    if (y as f32) <= ((x as f32).sin() * 2. + 2.) * 5. {
+                        chunk.set(
+                            x,
+                            y,
+                            z,
+                            Block::Solid(BlockId(
+                                storage.get_id_by_name("grass".to_string()).unwrap().0 as u32,
+                            )),
+                        );
                     }
                 }
             }
@@ -34,7 +42,7 @@ fn spawn_chunk(mut commands: Commands, storage: Res<BlockStorage>) {
 
         chunk
     });
-    chunk.with_translation(Vec3::new(2. * (CHUNK_W as f32 - 1.), 0., 0.));
+    chunk.with_translation(Vec3::new(0., 0., 0.));
     let en_chunk = commands.spawn(()).id();
     commands.entity(en_chunk).insert(chunk);
 }
