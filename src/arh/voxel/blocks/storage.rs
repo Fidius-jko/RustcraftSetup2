@@ -26,7 +26,7 @@ pub struct BlockSideInfo(pub Mesh);
 #[derive(Clone, PartialEq, Eq, Hash, Copy, Debug, Default)]
 pub struct BlockId(pub u32);
 
-use self::{resources::blocks::BlockFaces, voxel::mesh::meshing_block_type};
+use self::{resources::blocks::BlockFaces, voxel::render::mesh::meshing_block_type};
 
 #[derive(Resource)]
 pub struct BlockStorage {

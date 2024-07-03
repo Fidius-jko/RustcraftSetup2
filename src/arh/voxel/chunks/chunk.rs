@@ -1,15 +1,14 @@
 use bevy::ecs::query::QueryFilter;
+use voxel::{
+    blocks::{Block, BlockId},
+    consts::{CHUNK_D, CHUNK_H, CHUNK_W},
+};
 
-use super::blocks::*;
 use crate::prelude::*;
 
-pub const CHUNK_W: usize = 16;
-pub const CHUNK_D: usize = 16;
-pub const CHUNK_H: usize = 16;
-
-#[derive(Component, Clone)]
+#[derive(Component, Clone, Reflect)]
 pub struct Chunk {
-    blocks: [[[Block; CHUNK_W]; CHUNK_D]; CHUNK_H],
+    pub data: ChunkData,
     is_generated_mesh: bool,
     pub left_chunk: Option<Entity>,
     pub right_chunk: Option<Entity>,
@@ -18,14 +17,25 @@ pub struct Chunk {
     translation: Option<Vec3>,
 }
 
+#[derive(Clone, Reflect)]
+pub struct ChunkData {
+    #[reflect(ignore)]
+    pub blocks: [[[Block; CHUNK_H]; CHUNK_D]; CHUNK_W],
+}
+
 #[allow(dead_code)]
 impl Chunk {
     pub fn new(generator: impl Fn() -> Chunk) -> Self {
         generator()
     }
+    pub fn set_to_not_generated_mesh(&mut self) {
+        self.is_generated_mesh = false;
+    }
     pub fn air() -> Self {
         Self {
-            blocks: [[[Block::Air; CHUNK_W]; CHUNK_D]; CHUNK_H],
+            data: ChunkData {
+                blocks: [[[Block::Air; CHUNK_W]; CHUNK_D]; CHUNK_H],
+            },
             is_generated_mesh: false,
             left_chunk: None,
             right_chunk: None,
@@ -38,7 +48,7 @@ impl Chunk {
         self.translation = Some(trans);
     }
     pub fn set(&mut self, x: usize, y: usize, z: usize, val: Block) {
-        self.blocks[y][z][x] = val;
+        self.data.blocks[y][z][x] = val;
         self.is_generated_mesh = false;
     }
     pub fn set_as_generated(&mut self) {
@@ -51,7 +61,7 @@ impl Chunk {
         self.translation.clone()
     }
     pub fn get_from_only_my(&self, x: usize, y: usize, z: usize) -> Block {
-        self.blocks[y][z][x]
+        self.data.blocks[y][z][x]
     }
 
     pub fn get<T: QueryFilter>(&self, x: i32, y: i32, z: i32, chunks: &Query<&Chunk, T>) -> Block {
@@ -62,7 +72,7 @@ impl Chunk {
         let is_xw = x < CHUNK_W as i32;
         let is_zd = z < CHUNK_D as i32;
         if is_y0 && is_x0 && is_z0 && is_yh && is_xw && is_zd {
-            return self.blocks[y as usize][z as usize][x as usize];
+            return self.data.blocks[y as usize][z as usize][x as usize];
         } else if !is_x0 {
             if let Some(e) = self.left_chunk {
                 let chunk = match chunks.get(e) {

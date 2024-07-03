@@ -1,7 +1,8 @@
 use crate::voxel::blocks::BlockId;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 pub enum Block {
+    #[default]
     Air,
     Solid(BlockId),
 }

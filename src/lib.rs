@@ -1,15 +1,19 @@
 #![allow(clippy::type_complexity)]
 
-mod camera;
-mod config;
+pub mod camera;
+pub mod config;
+mod constants;
 mod debug;
-mod locale;
+pub mod locale;
 mod os;
 mod prelude;
-mod resources;
+mod render;
+pub mod resources;
 pub mod utils;
-mod voxel;
+pub mod voxel;
 
+use bevy_rapier3d::plugin::NoUserData;
+use bevy_rapier3d::render::RapierDebugRenderPlugin;
 pub use os::gen_app;
 pub use os::OSType;
 
@@ -41,6 +45,8 @@ impl Plugin for GamePlugin {
             ResourcesPlugin,
             CameraPlugin,
             VoxelPlugin,
+            RapierDebugRenderPlugin::default(),
+            bevy_rapier3d::prelude::RapierPhysicsPlugin::<NoUserData>::default(),
         ))
         .insert_resource(FramepaceSettings {
             limiter: bevy_framepace::Limiter::Off,

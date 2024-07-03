@@ -7,14 +7,16 @@ use bevy::{
         render_resource::{AsBindGroup, RenderPipelineDescriptor, SpecializedMeshPipelineError},
     },
 };
+use bevy_rapier3d::geometry::Collider;
 
-use super::{mesh::create_chunk_mesh, BlockStorage, Chunk};
+use super::mesh::create_chunk_mesh;
 
 pub struct VoxelRenderPlugin;
 
 impl Plugin for VoxelRenderPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (make_mesh).run_if(in_state(GameState::Play)));
+        app.add_systems(Update, make_mesh.run_if(in_state(GameState::Play)))
+            .add_plugins(MaterialPlugin::<VoxelMaterial>::default());
     }
 }
 
@@ -52,7 +54,6 @@ fn make_mesh(
                     ..Default::default()
                 });
         }
-        chunk.get(0, 0, 0, &chunks.to_readonly());
     }
     for mut chunk in chunks.iter_mut() {
         chunk.set_as_generated();

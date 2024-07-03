@@ -64,6 +64,11 @@ bevy = { version = "0.13", default-features = false, features = [
     "bevy_debug_stepping",
 ] }
 
+# keep the following in sync with Bevy's dependencies
+winit = { version = "0.29", default-features = false }
+image = { version = "0.25", default-features = false }
+# ----------------------------------------------------
+
 autodefault = "2.0.0"
 #bevy_fluent = "0.9" TODO!
 bevy_framepace = "0.15.0"
@@ -71,11 +76,9 @@ bevy-panic-handler = "2.2.0"
 bevy-inspector-egui = "0.24.0"
 iyes_progress = { git="https://github.com/IyesGames/iyes_progress.git", features=["assets"]}
 serde = "1.0.197" 
+bevy_rapier3d = "0.26.0"
 leafwing-input-manager = {version="0.13.3",default_features = false, features = []}
 
-# keep the following in sync with Bevy's dependencies
-winit = { version = "0.29", default-features = false }
-image = { version = "0.25", default-features = false }
 
 
 

@@ -1,10 +1,10 @@
 /// Camera moving
-use crate::prelude::*;
+use crate::{
+    constants::{CAMERA_SENTIVITY, CAMERA_SPEED},
+    prelude::*,
+};
 use bevy::window::{CursorGrabMode, PrimaryWindow};
 use leafwing_input_manager::prelude::*;
-
-pub const CAMERA_SPEED: f32 = 30.;
-pub const CAMERA_SENTIVITY: f32 = 0.00012;
 
 pub struct CameraPlugin;
 
@@ -14,7 +14,8 @@ impl Plugin for CameraPlugin {
         app.add_systems(Startup, add_camera)
             .add_systems(
                 Update,
-                (move_camera, grab_cursor, change_view).run_if(in_state(GameState::Play)),
+                (move_camera, grab_cursor, change_view, player_action)
+                    .run_if(in_state(GameState::Play)),
             )
             .add_plugins(InputManagerPlugin::<CameraActions>::default())
             .init_resource::<ActionState<CameraActions>>()
@@ -67,9 +68,19 @@ impl CameraActions {
 
 #[autodefault]
 fn add_camera(mut commands: Commands) {
-    commands.spawn(Camera3dBundle {}).insert(MainCamera);
+    commands
+        .spawn(Camera3dBundle {
+            transform: Transform::from_translation(Vec3::new(0., 0., 0.)),
+        })
+        .insert(MainCamera);
 }
 
+fn player_action(
+    cam: Query<&GlobalTransform, With<MainCamera>>,
+    click: Res<ButtonInput<MouseButton>>,
+    mut gizmos: Gizmos,
+) {
+}
 fn move_camera(
     mut cam: Query<&mut Transform, With<MainCamera>>,
     action_state: Res<ActionState<CameraActions>>,
@@ -122,7 +133,6 @@ fn change_view(
                 CursorGrabMode::None => (),
                 _ => {
                     let axis_pair = action_state.axis_pair(&CameraActions::ViewMotion).unwrap();
-                    // Using smallest of height or width ensures equal vertical and horizontal sensitivity
                     let window_scale = window.height().min(window.width());
                     pitch -= (CAMERA_SENTIVITY * axis_pair.y() * window_scale).to_radians();
                     yaw -= (CAMERA_SENTIVITY * axis_pair.x() * window_scale).to_radians();
@@ -131,7 +141,6 @@ fn change_view(
 
             pitch = pitch.clamp(-1.54, 1.54);
 
-            // Order is important to prevent unintended roll
             transform.rotation =
                 Quat::from_axis_angle(Vec3::Y, yaw) * Quat::from_axis_angle(Vec3::X, pitch);
         }
