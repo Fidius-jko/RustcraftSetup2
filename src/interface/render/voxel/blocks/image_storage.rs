@@ -89,17 +89,19 @@ impl BlockImageStorage {
         let mut binds = HashMap::new();
         binds.insert("unknown".to_string(), 0);
         let mut layout = TextureAtlasLayout::new_empty(Vec2::new(
-            resources::embedded::UNKNOWN_TEXTURE_SIZE.0 as f32,
-            resources::embedded::UNKNOWN_TEXTURE_SIZE.1 as f32,
+            crate::interface::resources::embedded::UNKNOWN_TEXTURE_SIZE.0 as f32,
+            crate::interface::resources::embedded::UNKNOWN_TEXTURE_SIZE.1 as f32,
         ));
         layout.add_texture(Rect {
             min: Vec2::new(0., 0.),
             max: Vec2::new(16., 16.),
         });
         Self {
-            texture: asset_server
-                .load("embedded://".to_string() + resources::embedded::UNKNOWN_TEXTURE_PATH),
-            texture_size: UVec2::from(resources::embedded::UNKNOWN_TEXTURE_SIZE),
+            texture: asset_server.load(
+                "embedded://".to_string()
+                    + crate::interface::resources::embedded::UNKNOWN_TEXTURE_PATH,
+            ),
+            texture_size: UVec2::from(crate::interface::resources::embedded::UNKNOWN_TEXTURE_SIZE),
             layout: layouts.add(layout),
             binds,
         }

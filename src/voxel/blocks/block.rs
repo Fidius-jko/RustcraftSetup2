@@ -1,5 +1,3 @@
-use crate::voxel::blocks::BlockId;
-
 #[derive(Clone, Copy, Debug, Default)]
 pub enum Block {
     #[default]
@@ -14,3 +12,5 @@ impl Block {
         }
     }
 }
+#[derive(Clone, PartialEq, Eq, Hash, Copy, Debug, Default)]
+pub struct BlockId(pub u32);

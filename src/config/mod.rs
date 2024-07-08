@@ -18,7 +18,7 @@ pub fn load() -> GameSettings {
     // TODO load
     GameSettings {
         lang: LanguageSettings {
-            lang: "ru_RU".to_string(),
+            lang: "en_EN".to_string(),
         },
     }
 }

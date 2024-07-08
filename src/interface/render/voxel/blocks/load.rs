@@ -1,5 +1,7 @@
 use super::*;
 use crate::prelude::*;
+use iyes_progress::ProgressSystem;
+use storage::BlockStorage;
 
 pub struct BlockLoadPlugin;
 
@@ -26,13 +28,13 @@ pub fn create_blocks_storage(
 
 #[derive(Resource)]
 pub struct BlockTypesFile {
-    types_file: Handle<crate::resources::blocks::BlockTypesAsset>,
+    types_file: Handle<crate::interface::resources::blocks::BlockTypesAsset>,
 }
 
 fn check_for_load(
     types: ResMut<BlockTypesFile>,
     mut storage: ResMut<BlockStorage>,
-    assets: Res<Assets<crate::resources::blocks::BlockTypesAsset>>,
+    assets: Res<Assets<crate::interface::resources::blocks::BlockTypesAsset>>,
     images: ResMut<Assets<Image>>,
     layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) -> iyes_progress::Progress {

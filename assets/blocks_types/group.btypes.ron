@@ -2,7 +2,8 @@
     images: {
         "dirt": "textures/blocks/dirt.png",
         "grass_side": "textures/blocks/grass_side.png",
-        "grass_up": "textures/blocks/grass_up.png"
+        "grass_up": "textures/blocks/grass_up.png",
+        "cobblestone": "textures/blocks/Cobblestone.png",
     },
     types: {
         "dirt": Block(
@@ -23,6 +24,16 @@
                 right:    "grass_side", 
                 forward:  "grass_side", 
                 backward: "grass_side",
+            )
+        ),
+        "cobblestone": Block(
+            faces: (
+                top:      "cobblestone", 
+                bottom:   "cobblestone", 
+                left:     "cobblestone", 
+                right:    "cobblestone", 
+                forward:  "cobblestone", 
+                backward: "cobblestone",
             )
         ),
         

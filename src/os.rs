@@ -20,7 +20,6 @@ pub enum OSType {
 }
 
 pub fn gen_app(os: OSType) -> App {
-    let start_settings = crate::config::load();
     let mut app = App::new();
     use bevy::asset::io::{file::FileAssetReader, AssetSource};
     app.register_asset_source(
@@ -50,7 +49,6 @@ pub fn gen_app(os: OSType) -> App {
         }
     }
 
-    app.insert_resource(start_settings);
     app.add_plugins(crate::GamePlugin);
     app
 }

@@ -1,9 +1,9 @@
 use bevy::utils::HashMap;
 
 use crate::{
+    interface::resources::blocks::{BlockTypesAsset, UnMeshedBlockType},
     prelude::*,
-    resources::blocks::{BlockTypesAsset, UnMeshedBlockType},
-    voxel::blocks::image_storage::BlockImageStorage,
+    voxel::blocks::BlockId,
 };
 
 pub struct BlockType {
@@ -23,10 +23,9 @@ pub struct BlockSides {
 #[derive(Clone)]
 pub struct BlockSideInfo(pub Mesh);
 
-#[derive(Clone, PartialEq, Eq, Hash, Copy, Debug, Default)]
-pub struct BlockId(pub u32);
+use crate::interface::{render::mesh::meshing_block_type, resources::blocks::BlockFaces};
 
-use self::{resources::blocks::BlockFaces, voxel::render::mesh::meshing_block_type};
+use super::image_storage::BlockImageStorage;
 
 #[derive(Resource)]
 pub struct BlockStorage {

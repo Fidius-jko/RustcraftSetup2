@@ -8,35 +8,6 @@ use bevy::render::{
 /// [`Indices`]
 /// [`POSITION`]
 
-/// MESH ATTRS
-//pub const ATTRIBUTE_BLEND_COLOR: MeshVertexAttribute =
-//    MeshVertexAttribute::new("BlendColor", 988540917, VertexFormat::Float32x4);
-/// ..........
-pub fn get_uv_coords(image_size: UVec2, coord: Rect) -> [[f32; 2]; 4] {
-    let prev = (
-        [
-            coord.min.x / image_size.x as f32,
-            coord.min.y / image_size.y as f32,
-        ],
-        [
-            coord.max.x / image_size.x as f32,
-            coord.max.y / image_size.y as f32,
-        ],
-    );
-    [
-        prev.1,
-        [prev.0[0], prev.1[1]],
-        prev.0,
-        [prev.1[0], prev.0[1]],
-    ]
-}
-
-pub fn merge_meshes(mesh: &mut Mesh, meshes: &Vec<Mesh>) {
-    for mesh2 in meshes.iter() {
-        mesh.merge(mesh2.clone());
-    }
-}
-
 pub fn void_mesh() -> Mesh {
     Mesh::new(
         PrimitiveTopology::TriangleList,
@@ -58,6 +29,7 @@ pub enum SquareType3D {
 pub fn square_mesh(
     width: f32,
     height: f32,
+    depth: f32,
     s_type: SquareType3D,
     image_size: UVec2,
     image_rect: Rect,
@@ -148,6 +120,6 @@ pub fn square_mesh(
     } else {
         mesh.insert_indices(Indices::U32(vec![0, 3, 1, 1, 3, 2]));
     }
-    mesh.scale_by(Vec3::new(width, height, 1.));
+    mesh.scale_by(Vec3::new(width, height, depth));
     mesh
 }
