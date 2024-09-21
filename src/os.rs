@@ -1,7 +1,6 @@
 /// Platform specific setup
 use crate::prelude::*;
 
-use bevy::asset::AssetMetaCheck;
 use bevy::window::PrimaryWindow;
 use bevy::winit::WinitWindows;
 use bevy::DefaultPlugins;
@@ -70,8 +69,7 @@ fn mobile_settings(app: &mut App) {
 
 fn deskop_settings(app: &mut App) {
     app.insert_resource(Msaa::Off)
-        .insert_resource(AssetMetaCheck::Never)
-        .insert_resource(ClearColor(Color::rgb(0.4, 0.4, 0.4)))
+        .insert_resource(ClearColor(Color::srgb(0.4, 0.4, 0.4)))
         .add_plugins(
             DefaultPlugins
                 .set(WindowPlugin {

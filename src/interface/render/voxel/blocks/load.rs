@@ -1,6 +1,6 @@
 use super::*;
 use crate::prelude::*;
-use iyes_progress::ProgressSystem;
+use iyes_progress::prelude::*;
 use storage::BlockStorage;
 
 pub struct BlockLoadPlugin;
@@ -37,8 +37,8 @@ fn check_for_load(
     assets: Res<Assets<crate::interface::resources::blocks::BlockTypesAsset>>,
     images: ResMut<Assets<Image>>,
     layouts: ResMut<Assets<TextureAtlasLayout>>,
-) -> iyes_progress::Progress {
-    if let Some(asset) = assets.get(types.types_file.clone()) {
+) -> Progress {
+    if let Some(asset) = assets.get(types.types_file.clone().id()) {
         storage.add_block_types(asset, images, layouts);
         return true.into();
     }

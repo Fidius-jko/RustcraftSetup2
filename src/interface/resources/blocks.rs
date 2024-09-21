@@ -1,11 +1,10 @@
 use crate::prelude::*;
 use bevy::asset::LoadDirectError;
 use bevy::utils::hashbrown::HashMap;
-use bevy::utils::thiserror;
+
 use bevy::{
     asset::{io::Reader, ron, AssetLoader, AsyncReadExt, LoadContext},
     reflect::TypePath,
-    utils::BoxedFuture,
 };
 use serde::Deserialize;
 use thiserror::Error;
@@ -70,29 +69,30 @@ impl AssetLoader for BlockTypesLoader {
     type Asset = BlockTypesAsset;
     type Settings = ();
     type Error = BlockTypesAssetLoaderError;
-    fn load<'a>(
+    async fn load<'a>(
         &'a self,
-        reader: &'a mut Reader,
+        reader: &'a mut Reader<'_>,
         _settings: &'a (),
-        load_context: &'a mut LoadContext,
-    ) -> BoxedFuture<'a, Result<Self::Asset, Self::Error>> {
-        Box::pin(async move {
-            let mut bytes = Vec::new();
-            reader.read_to_end(&mut bytes).await?;
-            let custom_asset = ron::de::from_bytes::<PreBlockTypesAsset>(&bytes)?;
-            let mut images = HashMap::new();
-            for (name, file) in custom_asset.images {
-                let img = load_context
-                    .load_direct(file)
-                    .await?
-                    .take::<Image>()
-                    .ok_or(BlockTypesAssetLoaderError::InvalidImageType)?;
-                images.insert(name, img);
-            }
-            Ok(BlockTypesAsset {
-                images,
-                types: custom_asset.types,
-            })
+        load_context: &'a mut LoadContext<'_>,
+    ) -> Result<Self::Asset, Self::Error> {
+        let mut bytes = Vec::new();
+        reader.read_to_end(&mut bytes).await?;
+        let custom_asset = ron::de::from_bytes::<PreBlockTypesAsset>(&bytes)?;
+        let mut images = HashMap::new();
+        for (name, file) in custom_asset.images {
+            let img = load_context
+                .loader()
+                .direct()
+                .untyped()
+                .load(file)
+                .await?
+                .take::<Image>()
+                .ok_or(BlockTypesAssetLoaderError::InvalidImageType)?;
+            images.insert(name, img);
+        }
+        Ok(BlockTypesAsset {
+            images,
+            types: custom_asset.types,
         })
     }
 

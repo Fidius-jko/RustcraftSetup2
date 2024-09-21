@@ -1,4 +1,4 @@
-use bevy::ecs::query::QueryFilter;
+use bevy::{ecs::query::QueryFilter, render::primitives::Aabb};
 use primitive_types::U256;
 
 use crate::{
@@ -126,12 +126,16 @@ fn make_meshes(
             Ok(mesh2) => match transforms.get_mut(chunk_en) {
                 Ok(mut transf) => {
                     transf.translation = translation;
-                    let mesh2 = meshes_assets.get_mut(mesh2.clone()).unwrap();
+                    let mesh2 = meshes_assets.get_mut(mesh2.clone().id()).unwrap();
                     *mesh2 = mesh;
+                    // Update AABB
+                    commands.entity(chunk_en).remove::<Aabb>();
                 }
                 Err(_) => {
-                    let mesh2 = meshes_assets.get_mut(mesh2.clone()).unwrap();
+                    let mesh2 = meshes_assets.get_mut(mesh2.clone().id()).unwrap();
                     *mesh2 = mesh;
+                    // Update AABB
+                    commands.entity(chunk_en).remove::<Aabb>();
                     commands
                         .entity(chunk_en)
                         .insert(TransformBundle::from_transform(
@@ -243,27 +247,27 @@ pub fn create_chunk_mesh<T: QueryFilter>(
                 let sides = storage.get_or_default(block).sides.clone();
                 if y < CHUNK_H && z < CHUNK_D {
                     if get_bit_u32(left_mask[z][y], x as u32 + 1) {
-                        mesh2.merge(sides.left.0.clone());
+                        mesh2.merge(&sides.left.0);
                     }
 
                     if get_bit_u32(right_mask[z][y], x as u32 + 1) {
-                        mesh2.merge(sides.right.0.clone());
+                        mesh2.merge(&sides.right.0);
                     }
                 }
                 if x < CHUNK_W && y < CHUNK_H {
                     if get_bit_u32(forward_mask[x][y], z as u32 + 1) {
-                        mesh2.merge(sides.forward.0.clone());
+                        mesh2.merge(&sides.forward.0);
                     }
                     if get_bit_u32(backward_mask[x][y], z as u32 + 1) {
-                        mesh2.merge(sides.back.0.clone());
+                        mesh2.merge(&sides.back.0);
                     }
                 }
                 if x < CHUNK_W && z < CHUNK_D {
                     if get_bit_u256(down_mask[z][x], y as u32 + 1) {
-                        mesh2.merge(sides.bottom.0.clone());
+                        mesh2.merge(&sides.bottom.0);
                     }
                     if get_bit_u256(up_mask[z][x], y as u32 + 1) {
-                        mesh2.merge(sides.top.0.clone());
+                        mesh2.merge(&sides.top.0);
                     }
                 }
                 mesh2.translate_by(Vec3::new(
@@ -271,7 +275,7 @@ pub fn create_chunk_mesh<T: QueryFilter>(
                     VOXEL_SIZE * y as f32,
                     VOXEL_SIZE * z as f32,
                 ));
-                mesh.merge(mesh2);
+                mesh.merge(&mesh2);
             }
         }
     }

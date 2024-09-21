@@ -32,16 +32,16 @@ pub fn square_mesh(
     depth: f32,
     s_type: SquareType3D,
     image_size: UVec2,
-    image_rect: Rect,
+    image_rect: URect,
 ) -> Mesh {
     let prev_uv = (
         [
-            image_rect.min.x / image_size.x as f32,
-            image_rect.min.y / image_size.y as f32,
+            image_rect.min.x as f32 / image_size.x as f32,
+            image_rect.min.y as f32 / image_size.y as f32,
         ],
         [
-            image_rect.max.x / image_size.x as f32,
-            image_rect.max.y / image_size.y as f32,
+            image_rect.max.x as f32 / image_size.x as f32,
+            image_rect.max.y as f32 / image_size.y as f32,
         ],
     );
 

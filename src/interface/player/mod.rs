@@ -2,14 +2,7 @@ use bevy::{
     render::view::RenderLayers,
     window::{CursorGrabMode, PrimaryWindow},
 };
-use leafwing_input_manager::{
-    action_state::ActionState,
-    axislike::{DualAxis, VirtualDPad},
-    input_map::InputMap,
-    plugin::InputManagerPlugin,
-    user_input::{InputKind, UserInput},
-    Actionlike,
-};
+use leafwing_input_manager::prelude::*;
 
 use crate::{
     prelude::*,
@@ -29,7 +22,7 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
-            Update,
+            FixedUpdate,
             (
                 move_camera,
                 grab_cursor,
@@ -50,11 +43,13 @@ impl Plugin for PlayerPlugin {
 
 #[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug, Reflect)]
 pub enum PlayerActions {
+    #[actionlike(DualAxis)]
     Move,
     Up,
     Down,
     GrabCursor,
     UnGrabCursor,
+    #[actionlike(DualAxis)]
     ViewMotion,
     PlaceBlock,
     HurtBlock,
@@ -64,37 +59,26 @@ impl PlayerActions {
     fn mkb_input_map() -> InputMap<PlayerActions> {
         use KeyCode::*;
         InputMap::new([
-            (Self::Up, UserInput::Single(InputKind::PhysicalKey(Space))),
-            (
-                Self::Down,
-                UserInput::Single(InputKind::PhysicalKey(ShiftLeft)),
-            ),
-            (Self::Move, UserInput::VirtualDPad(VirtualDPad::wasd())),
-            (
-                Self::Move,
-                UserInput::VirtualDPad(VirtualDPad::arrow_keys()),
-            ),
-            (
-                Self::GrabCursor,
-                UserInput::Single(InputKind::PhysicalKey(KeyCode::Tab)),
-            ),
-            (
-                Self::UnGrabCursor,
-                UserInput::Single(InputKind::PhysicalKey(KeyCode::Escape)),
-            ),
-            (
-                Self::ViewMotion,
-                UserInput::Single(InputKind::DualAxis(DualAxis::mouse_motion())),
-            ),
-            (
-                Self::HurtBlock,
-                UserInput::Single(InputKind::Mouse(MouseButton::Right)),
-            ),
-            (
-                Self::PlaceBlock,
-                UserInput::Single(InputKind::Mouse(MouseButton::Left)),
-            ),
+            (Self::Up, Space),
+            (Self::Down, ShiftLeft),
+            (Self::GrabCursor, Tab),
+            (Self::UnGrabCursor, Escape),
         ])
+        .with_dual_axis(
+            Self::Move,
+            // Define a virtual D-pad using four arbitrary keys.
+            // You can also use GamepadVirtualDPad to create similar ones using gamepad buttons.
+            KeyboardVirtualDPad::new(KeyCode::KeyW, KeyCode::KeyS, KeyCode::KeyA, KeyCode::KeyD),
+        )
+        .with_dual_axis(
+            Self::Move,
+            // Define a virtual D-pad using four arbitrary keys.
+            // You can also use GamepadVirtualDPad to create similar ones using gamepad buttons.
+            KeyboardVirtualDPad::new(ArrowUp, ArrowDown, ArrowLeft, ArrowRight),
+        )
+        .with_dual_axis(Self::ViewMotion, MouseMove::default())
+        .with(Self::PlaceBlock, MouseButton::Left)
+        .with(Self::HurtBlock, MouseButton::Right)
     }
 }
 fn set_cam_pos(
@@ -151,7 +135,7 @@ fn player_action(
         .floor()
         .as_ivec3();
     let mut prev_iray_pos = iray_pos.clone();
-    let dir = camera_transform.forward() / 100.;
+    let dir = camera_transform.forward().as_vec3() / 100.;
     while camera_transform.translation().distance(ray_pos) <= max_dist {
         if let Some(Block::Solid(_)) = chunk.get_i32(iray_pos.x, iray_pos.y, iray_pos.z) {
             break;
@@ -215,20 +199,16 @@ fn move_camera(
                 if action_state.pressed(&PlayerActions::Down) {
                     velocity -= Vec3::Y;
                 }
-                if action_state.pressed(&PlayerActions::Move) {
-                    let axis_pair = action_state
-                        .clamped_axis_pair(&PlayerActions::Move)
-                        .unwrap();
-                    velocity += axis_pair.y() * forward;
-                    velocity += axis_pair.x() * right;
-                }
+                let axis_pair = action_state.clamped_axis_pair(&PlayerActions::Move);
+                velocity += axis_pair.y * forward;
+                velocity += axis_pair.x * right;
                 velocity = velocity.normalize_or_zero();
 
                 transform.translation += velocity * time.delta_seconds() * CAMERA_SPEED;
             }
         }
     } else {
-        warn!("Can't found primary window!");
+        //warn!("Can't found primary window!");
     }
 }
 
@@ -238,26 +218,24 @@ fn change_view(
     primary_window: Query<&Window, With<PrimaryWindow>>,
 ) {
     if let Ok(window) = primary_window.get_single() {
-        if action_state.pressed(&PlayerActions::ViewMotion) {
-            let mut transform = cam.single_mut();
-            let (mut yaw, mut pitch, _) = transform.rotation.to_euler(EulerRot::YXZ);
-            match window.cursor.grab_mode {
-                CursorGrabMode::None => (),
-                _ => {
-                    let axis_pair = action_state.axis_pair(&PlayerActions::ViewMotion).unwrap();
-                    let window_scale = window.height().min(window.width());
-                    pitch -= (CAMERA_SENTIVITY * axis_pair.y() * window_scale).to_radians();
-                    yaw -= (CAMERA_SENTIVITY * axis_pair.x() * window_scale).to_radians();
-                }
+        let mut transform = cam.single_mut();
+        let (mut yaw, mut pitch, _) = transform.rotation.to_euler(EulerRot::YXZ);
+        match window.cursor.grab_mode {
+            CursorGrabMode::None => (),
+            _ => {
+                let axis_pair = action_state.axis_pair(&PlayerActions::ViewMotion);
+                let window_scale = window.height().min(window.width());
+                pitch -= (CAMERA_SENTIVITY * axis_pair.y * window_scale).to_radians();
+                yaw -= (CAMERA_SENTIVITY * axis_pair.x * window_scale).to_radians();
             }
-
-            pitch = pitch.clamp(-1.54, 1.54);
-
-            transform.rotation =
-                Quat::from_axis_angle(Vec3::Y, yaw) * Quat::from_axis_angle(Vec3::X, pitch);
         }
+
+        pitch = pitch.clamp(-1.54, 1.54);
+
+        transform.rotation =
+            Quat::from_axis_angle(Vec3::Y, yaw) * Quat::from_axis_angle(Vec3::X, pitch);
     } else {
-        warn!("Can't found primary window!");
+        //warn!("Can't found primary window!");
     }
 }
 
@@ -275,6 +253,6 @@ fn grab_cursor(
             window.cursor.visible = true;
         }
     } else {
-        warn!("Can't found primary window!");
+        //warn!("Can't found primary window!");
     }
 }

@@ -1,4 +1,4 @@
-#import bevy_pbr::mesh_functions::{get_model_matrix, mesh_position_local_to_clip}
+#import bevy_pbr::mesh_functions::{get_world_from_local, mesh_position_local_to_clip}
 
 
 @group(2) @binding(0) var material_color_texture: texture_2d<f32>;
@@ -19,7 +19,7 @@ struct VertexOutput {
 fn vertex(vertex: Vertex) -> VertexOutput {
     var out: VertexOutput;
     out.clip_position = mesh_position_local_to_clip(
-        get_model_matrix(vertex.instance_index),
+        get_world_from_local(vertex.instance_index),
         vec4<f32>(vertex.position, 1.0),
     );
     out.uv = vertex.uv;

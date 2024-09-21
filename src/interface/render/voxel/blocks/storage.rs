@@ -98,7 +98,7 @@ impl BlockStorage {
             binds.insert(name.clone(), i);
             i += 1;
         }
-        let (layout, texture) = builder.finish().unwrap();
+        let (layout, texture) = builder.build().unwrap();
         let new_img_storage = BlockImageStorage {
             texture_size: texture.size(),
             texture: images.add(texture),

@@ -10,7 +10,7 @@ crate-type = ["staticlib", "cdylib"]
 
 [dependencies]
 rustcraft = { path = ".." }
-bevy = { version = "0.13", default-features = false }
+bevy = { version = "0.14", default-features = false }
 
 [target."cfg(target_os = \"android\")".dependencies.cpal]
 version = "0.15"
@@ -18,7 +18,7 @@ features = ["oboe-shared-stdcxx"]
 
 [package.metadata.android]
 package = "me.fidius.rustcraft" 
-apk_name = "Rustcarft"
+apk_name = "Rustcraft"
 assets = "../assets"
 strip = "strip"
 resources = "../build/android/res"
